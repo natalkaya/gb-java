@@ -1,5 +1,7 @@
 package lesson1;
 
+import org.omg.CosNaming.NamingContextPackage.NotFound;
+
 import java.util.Arrays;
 
 public enum DayOfWeek {
@@ -24,9 +26,9 @@ public enum DayOfWeek {
         this.workingHours = 8;
     }
 
-    public static DayOfWeek valueOf(int numberOfWeek) {
+    public static DayOfWeek valueOf(int numberOfWeek) throws NotFound {
         return Arrays.stream(DayOfWeek.values()).filter(dayOfWeek ->
-                dayOfWeek.numberOfWeek == numberOfWeek).findFirst().orElseThrow();
+                dayOfWeek.numberOfWeek == numberOfWeek).findFirst().orElseThrow(NotFound::new);
     }
 
     public static int getWorkingHours(DayOfWeek dayOfWeek) {
@@ -35,7 +37,11 @@ public enum DayOfWeek {
         int currentDayNumber = dayOfWeek.numberOfWeek;
 
         while (currentDayNumber != SUNDAY.numberOfWeek) {
-            hours += valueOf(currentDayNumber).workingHours;
+            try {
+                hours += valueOf(currentDayNumber).workingHours;
+            } catch (NotFound notFound) {
+                notFound.printStackTrace();
+            }
             currentDayNumber++;
         }
 

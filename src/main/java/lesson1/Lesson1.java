@@ -9,6 +9,7 @@ import lesson1.objects.Participant;
 import lesson1.objects.Robot;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
@@ -30,13 +31,13 @@ public class Lesson1 {
         final int boundWallHeight = 7;
         final int boundRunDistance = 42;
 
-        List<Participant> participants = new ArrayList<>(List.of(
+        List<Participant> participants = new ArrayList<>(Arrays.asList(
                 new Cat("Barsik", random.nextInt(boundDistance), random.nextInt(boundHeight)),
                 new Human("BraveMan", random.nextInt(boundDistance), random.nextInt(boundHeight)),
                 new Robot("Robocop", random.nextInt(boundDistance), random.nextInt(boundHeight))
         ));
 
-        List<Barriers> barriers = new ArrayList<>(List.of(
+        List<Barriers> barriers = new ArrayList<>(Arrays.asList(
                 new Wall("Wall#1", random.nextInt(boundWallHeight)),
                 new Treadmill("Treadmill#1", random.nextInt(boundRunDistance)),
                 new Wall("Wall#2", random.nextInt(boundWallHeight)),
