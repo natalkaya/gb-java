@@ -33,8 +33,7 @@ public class ClientHandler {
                             if (token.length < 3) {
                                 continue;
                             }
-                            String newNick = server.getAuthService()
-                                    .getNicknameByLoginAndPassword(token[1], token[2]);
+                            String newNick = server.getAuthService().getNicknameByLoginAndPassword(token[1], token[2]);
                             if (newNick != null){
                                 nickname = newNick;
                                 server.subscribe(this);
@@ -54,6 +53,12 @@ public class ClientHandler {
                             sendMsg("/end");
                             break;
                         }
+
+                        if (str.startsWith("/changeNick")) {
+                            System.out.println("/changeNick pressed");
+                            server.changeNickname(this, str);
+                        }
+
                         if (str.startsWith("/w ")) {
                             server.privateMsg(this, str);
                         } else {
@@ -91,4 +96,5 @@ public class ClientHandler {
     public String getNickname() {
         return nickname;
     }
+    public void setNickname(String nickname) { this.nickname = nickname; }
 }

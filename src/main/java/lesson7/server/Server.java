@@ -1,5 +1,8 @@
 package lesson7.server;
 
+import lesson7.server.authservice.SQLiteAuthService;
+import lesson7.server.authservice.SimpleAuthService;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -10,10 +13,13 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class Server {
     private List<ClientHandler> clients;
     private AuthService authService;
+    private PersonInfoService personInfoService;
 
     public Server() {
         clients = new CopyOnWriteArrayList<>();
-        authService = new SimpleAuthService();
+//        authService = new SimpleAuthService();
+        authService = new SQLiteAuthService();
+        personInfoService = new SQLitePersonInfoService();
         ServerSocket server = null;
         Socket socket = null;
         final int PORT = 8189;
@@ -68,6 +74,17 @@ public class Server {
             }
         }
 
+    }
+
+    public void changeNickname(ClientHandler sender, String msg) {
+        System.out.println("/changeNick pressed: ");
+        if (msg.startsWith("/changeNick")) {
+            String[] arr = msg.trim().split(" ");
+            String newNickname = arr[1];
+            boolean isChanged = personInfoService.changeNickName(newNickname, sender.getNickname());
+            if (isChanged) sender.setNickname(newNickname);
+            broadcastMsg(sender, "User has changes nickname, current nickname: " + newNickname);
+        }
     }
 
     public void subscribe(ClientHandler clientHandler) {

@@ -1,4 +1,6 @@
-package lesson7.server;
+package lesson7.server.authservice;
+
+import lesson7.server.AuthService;
 
 import java.util.ArrayList;
 import java.util.List;
