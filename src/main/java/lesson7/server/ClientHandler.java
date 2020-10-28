@@ -12,7 +12,7 @@ public class ClientHandler {
     DataOutputStream out;
     Server server;
     Socket socket;
-    FileOutputStream outputStream;
+    FileWriter outputStream;
 
     private String nickname;
     private String login;
@@ -26,7 +26,10 @@ public class ClientHandler {
         String lastMsgs = null;
         try {
             List<String> fileStrs = Files.readAllLines(Paths.get(historyFileTemplate(nickname)));
-            lastMsgs = String.valueOf(fileStrs.stream().limit(100).collect(Collectors.toList()));
+            lastMsgs = fileStrs.stream()
+                    .limit(100)
+                    .map(String::valueOf)
+                    .collect(Collectors.joining("\n"));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -61,11 +64,11 @@ public class ClientHandler {
                                 this.historyFileName = historyFileTemplate(nickname);
                                 final File file = new File(historyFileName);
                                 if (file.exists()) {
-                                    this.outputStream = new FileOutputStream(file);
                                     sendMsg(loadMessages());
+                                    this.outputStream = new FileWriter(file);
                                 } else {
                                     if (file.createNewFile()) {
-                                        this.outputStream = new FileOutputStream(file);
+                                        this.outputStream = new FileWriter(file, true);
                                     } else {
                                         System.out.println("Cannot create file with name: " + historyFileName);
                                     }
@@ -83,7 +86,6 @@ public class ClientHandler {
 
                         if (str.equals("/end")) {
                             sendMsg("/end");
-                            outputStream.close();
                             break;
                         }
 

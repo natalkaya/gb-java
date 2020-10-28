@@ -6,6 +6,9 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -80,7 +83,7 @@ public class Server {
 
     public void saveMessage(ClientHandler sender, String msg) {
         try {
-            sender.outputStream.write((msg + "\n").getBytes(Charset.defaultCharset()));
+            sender.outputStream.append(msg).append("\n");
         } catch (IOException e) {
             e.printStackTrace();
         }
