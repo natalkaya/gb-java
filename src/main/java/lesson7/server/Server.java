@@ -1,11 +1,14 @@
 package lesson7.server;
 
 import lesson7.server.authservice.SQLiteAuthService;
-import lesson7.server.authservice.SimpleAuthService;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -53,6 +56,7 @@ public class Server {
         String message = String.format("[ %s ]: %s", sender.getNickname(), msg);
         for (ClientHandler c : clients) {
             c.sendMsg(message);
+            saveMessage(c, message);
         }
     }
 
@@ -69,11 +73,20 @@ public class Server {
             if (recipient.isPresent()) {
                 sender.sendMsg(message);
                 recipient.get().sendMsg(message);
+                saveMessage(sender, message);
             } else {
                 sender.sendMsg("User is offline / not found");
             }
         }
 
+    }
+
+    public void saveMessage(ClientHandler sender, String msg) {
+        try {
+            sender.outputStream.append(msg).append("\n");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void changeNickname(ClientHandler sender, String msg) {

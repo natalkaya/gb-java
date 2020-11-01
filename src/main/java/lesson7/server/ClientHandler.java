@@ -1,18 +1,40 @@
 package lesson7.server;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class ClientHandler {
     DataInputStream in;
     DataOutputStream out;
     Server server;
     Socket socket;
+    FileWriter outputStream;
 
     private String nickname;
     private String login;
+    private String historyFileName;
+
+    private String historyFileTemplate(String nickname) {
+        return String.format("history_%s.txt", nickname);
+    }
+
+    private String loadMessages() {
+        String lastMsgs = null;
+        try {
+            List<String> fileStrs = Files.readAllLines(Paths.get(historyFileTemplate(nickname)));
+            lastMsgs = fileStrs.stream()
+                    .limit(100)
+                    .map(String::valueOf)
+                    .collect(Collectors.joining("\n"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return lastMsgs;
+    }
 
     public ClientHandler(Server server, Socket socket) {
         try {
@@ -34,10 +56,23 @@ public class ClientHandler {
                                 continue;
                             }
                             String newNick = server.getAuthService().getNicknameByLoginAndPassword(token[1], token[2]);
-                            if (newNick != null){
+                            if (newNick != null) {
                                 nickname = newNick;
                                 server.subscribe(this);
-                                sendMsg("/authok "+ newNick);
+                                sendMsg("/authok " + newNick);
+
+                                this.historyFileName = historyFileTemplate(nickname);
+                                final File file = new File(historyFileName);
+                                if (file.exists()) {
+                                    sendMsg(loadMessages());
+                                    this.outputStream = new FileWriter(file);
+                                } else {
+                                    if (file.createNewFile()) {
+                                        this.outputStream = new FileWriter(file, true);
+                                    } else {
+                                        System.out.println("Cannot create file with name: " + historyFileName);
+                                    }
+                                }
                                 break;
                             } else {
                                 sendMsg("Неверный логин / пароль");
@@ -74,6 +109,7 @@ public class ClientHandler {
                         socket.close();
                         in.close();
                         out.close();
+                        outputStream.close();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -96,5 +132,8 @@ public class ClientHandler {
     public String getNickname() {
         return nickname;
     }
-    public void setNickname(String nickname) { this.nickname = nickname; }
+
+    public void setNickname(String nickname) {
+        this.nickname = nickname;
+    }
 }
