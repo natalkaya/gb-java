@@ -5,18 +5,17 @@ import lesson7.server.authservice.SQLiteAuthService;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Server {
     private List<ClientHandler> clients;
     private AuthService authService;
     private PersonInfoService personInfoService;
+    private ExecutorService executorService = Executors.newFixedThreadPool(10);
 
     public Server() {
         clients = new CopyOnWriteArrayList<>();
@@ -39,6 +38,7 @@ public class Server {
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
+            executorService.shutdownNow();
             try {
                 socket.close();
             } catch (IOException e) {
@@ -54,31 +54,34 @@ public class Server {
 
     public void broadcastMsg(ClientHandler sender, String msg) {
         String message = String.format("[ %s ]: %s", sender.getNickname(), msg);
-        for (ClientHandler c : clients) {
-            c.sendMsg(message);
-            saveMessage(c, message);
-        }
+        executorService.submit(() -> {
+            for (ClientHandler c : clients) {
+                c.sendMsg(message);
+                saveMessage(c, message);
+            }
+        });
     }
 
     public void privateMsg(ClientHandler sender, String msg) {
-        if (msg.startsWith("/w ")) {
-            String[] arr = msg.trim().split(" ");
-            String recipientNick = arr[1];
-            String message = String.format("[ %s ]: %s", sender.getNickname(), arr[2]);
+        executorService.submit(() -> {
+            if (msg.startsWith("/w ")) {
+                String[] arr = msg.trim().split(" ");
+                String recipientNick = arr[1];
+                String message = String.format("[ %s ]: %s", sender.getNickname(), arr[2]);
 
-            Optional<ClientHandler> recipient = clients.stream()
-                    .filter(c -> c.getNickname().equals(recipientNick))
-                    .findFirst();
+                Optional<ClientHandler> recipient = clients.stream()
+                        .filter(c -> c.getNickname().equals(recipientNick))
+                        .findFirst();
 
-            if (recipient.isPresent()) {
-                sender.sendMsg(message);
-                recipient.get().sendMsg(message);
-                saveMessage(sender, message);
-            } else {
-                sender.sendMsg("User is offline / not found");
+                if (recipient.isPresent()) {
+                    sender.sendMsg(message);
+                    recipient.get().sendMsg(message);
+                    saveMessage(sender, message);
+                } else {
+                    sender.sendMsg("User is offline / not found");
+                }
             }
-        }
-
+        });
     }
 
     public void saveMessage(ClientHandler sender, String msg) {
