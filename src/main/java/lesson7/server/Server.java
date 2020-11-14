@@ -10,12 +10,14 @@ import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.logging.Logger;
 
-public class Server {
+public class Server implements LogRunner {
     private List<ClientHandler> clients;
     private AuthService authService;
     private PersonInfoService personInfoService;
     private ExecutorService executorService = Executors.newFixedThreadPool(10);
+    private static Logger log;
 
     public Server() {
         clients = new CopyOnWriteArrayList<>();
@@ -25,10 +27,11 @@ public class Server {
         ServerSocket server = null;
         Socket socket = null;
         final int PORT = 8189;
+        log = initLogger(Server.class.getName());
 
         try {
             server = new ServerSocket(PORT);
-            System.out.println("Server started");
+            log.info("Server started");
 
             while (true) {
                 socket = server.accept();
