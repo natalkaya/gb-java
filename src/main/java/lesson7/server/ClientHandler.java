@@ -5,9 +5,10 @@ import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-public class ClientHandler {
+public class ClientHandler implements LogRunner {
     DataInputStream in;
     DataOutputStream out;
     Server server;
@@ -17,6 +18,7 @@ public class ClientHandler {
     private String nickname;
     private String login;
     private String historyFileName;
+    private static Logger log;
 
     private String historyFileTemplate(String nickname) {
         return String.format("history_%s.txt", nickname);
@@ -42,7 +44,8 @@ public class ClientHandler {
             this.socket = socket;
             in = new DataInputStream(socket.getInputStream());
             out = new DataOutputStream(socket.getOutputStream());
-            System.out.println("Client connected " + socket.getRemoteSocketAddress());
+            log = initLogger(ClientHandler.class.getName());
+            log.info("Client connected " + socket.getRemoteSocketAddress());
 
             new Thread(() -> {
                 try {
@@ -70,7 +73,7 @@ public class ClientHandler {
                                     if (file.createNewFile()) {
                                         this.outputStream = new FileWriter(file, true);
                                     } else {
-                                        System.out.println("Cannot create file with name: " + historyFileName);
+                                        log.info("Cannot create file with name: " + historyFileName);
                                     }
                                 }
                                 break;
@@ -90,7 +93,7 @@ public class ClientHandler {
                         }
 
                         if (str.startsWith("/changeNick")) {
-                            System.out.println("/changeNick pressed");
+                            log.info("/changeNick pressed");
                             server.changeNickname(this, str);
                         }
 
@@ -104,7 +107,7 @@ public class ClientHandler {
                     e.printStackTrace();
                 } finally {
                     server.unsubscribe(this);
-                    System.out.println("Client disconnected " + socket.getRemoteSocketAddress());
+                    log.info("Client disconnected " + socket.getRemoteSocketAddress());
                     try {
                         socket.close();
                         in.close();
